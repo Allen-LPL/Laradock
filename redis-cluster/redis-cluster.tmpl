@@ -1,0 +1,8 @@
+bind 0.0.0.0
+port ${PORT}
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+cluster-announce-ip 172.16.97.226
+appendonly yes
+dir /redis-data/${PORT}

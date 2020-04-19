@@ -1,0 +1,362 @@
+#server {
+#    listen 127.0.0.1;
+#    server_name localhost;
+#
+#    error_log  /var/log/nginx/error-local-ttz.log;
+#
+#    root   /var/www/ttz/ttz-web/ttz-web/Public;
+#
+#    location ~ \.php$ {
+#        fastcgi_pass php-upstream;
+#        include /etc/nginx/sites-available/*.conf;
+#        include /etc/nginx/sites-enabled/*;
+#
+#        fastcgi_intercept_errors        on;
+#        error_page 404 /error/404.php;
+#    }
+#}
+
+server
+{
+    listen 80;
+    server_name m.ttz01.com;
+    rewrite ^/(.*) http://m.ttz.com/$1 permanent;
+}
+
+server
+{
+    listen 80;
+    server_name ttz01.com;
+    include /etc/nginx/sites-available/agent.config;
+    access_log  /var/log/nginx/access80-ttz01.log;
+    rewrite ^/(.*) http://www.ttz01.com/$1 permanent;
+}
+
+server
+{
+    listen 80;
+    server_name ttz.com;
+    include /etc/nginx/sites-available/agent.config;
+    access_log  /var/log/nginx/access80-ttz.log;
+    rewrite ^/(.*) http://www.ttz.com/$1 permanent;
+}
+
+#server
+#{
+#    listen 80;
+#    server_name mobile.ttz.com;
+#    include /etc/nginx/sites-available/agent.config;
+#    access_log  /var/log/nginx/access80-ttz.log;
+#    rewrite ^/(.*) http://mobile.ttz.com/$1 permanent;
+#}
+#server
+#{
+#    listen 80;
+#    server_name 28.ttz.com;
+#    include /etc/nginx/sites-available/agent.config;
+#    access_log  /var/log/nginx/access80-ttz.log;
+#    rewrite ^/(.*) http://28.ttz.com/$1 permanent;
+#}
+
+
+server {
+    listen       80;
+    server_name  m.ttz.com;
+    include /etc/nginx/sites-available/agent.config;
+    access_log  /var/log/nginx/access80-ttzm.log;
+    root   /var/www/ttz/ttz-web/ttz-web/Public;
+    index mobile2.html;
+
+    error_page  502 /502.html;
+    error_page  403 404 /404.html;
+
+    location = /404.html {
+        root   /var/www/ttz/ttz-web/ttz-web/Public/error-html;
+        break;
+    }
+
+    location / {
+#       limit_rate 70k;
+        index mobile2.php;
+        if (!-e $request_filename) {
+                rewrite  ^/(.*)$  /mobile2.php/$1  last;
+                break;
+        }
+    }
+
+    location ~* ^.+\.(ico|gif|jpg|jpeg|png|css|js|txt|xml|swf|wav)$ {
+        root         /var/www/ttz/ttz-web/ttz-web/Public;
+        access_log   off;
+        expires      1d;
+    }
+
+    #location ~ .+\.php($|/) {
+    location ~* \.php$ {
+        set $script    $uri;
+        set $path_info  "/";
+        if ($uri ~ "^(.+\.php)(/.+)") {
+            set $script     $1;
+            set $path_info  $2;
+        }
+        fastcgi_pass php-upstream;
+        fastcgi_index  index.php?IF_REWRITE=1;
+        include fastcgi_params;
+        fastcgi_param PATH_INFO $path_info;
+        fastcgi_param SCRIPT_FILENAME  $document_root/$script;
+        fastcgi_param SCRIPT_NAME $script;
+    }
+
+}
+
+server {
+    listen       80;
+    server_name res.ttz.com ;
+    access_log  /var/log/nginx/access80-ttz01-01.log;
+    error_log  /var/log/nginx/error80-ttz01.log;
+    include /etc/nginx/sites-available/agent.config;
+
+    root   /var/www/ttz/ttz-web/ttz-web/Public;
+    index index.php index.html;
+
+    #error_page  502 /502.html;
+    #error_page  403 404 /404.html;
+
+    #location = /404.html {
+    #    root   /var/www/ttz/ttz-web/ttz-web/Public/error-html;
+    #    break;
+    #}
+    location /rf {
+        rewrite  ^/rf/(.*)$  /index.php/Register/Register/?$1  last;
+        break;
+    }
+
+    location /fd {
+        rewrite  ^/fd/(.*)$  /index.php/Member/activeRegister/RecommentId/$1  last;
+        break;
+    }
+    location / {
+#       limit_rate 70k;
+        index index.php;
+        if (!-e $request_filename) {
+                rewrite  ^/(.*)$  /index.php/$1  last;
+                break;
+        }
+    }
+
+    location ~* ^.+\.(gif|jpg|jpeg|png|css|js|txt|xml|swf|wav)$ {
+        root         /var/www/ttz/ttz-web/ttz-web/Public;
+        access_log   off;
+        expires      1d;
+    }
+
+    # set site favicon
+    location /favicon.ico {
+        root /var/www/ttz/ttz-web/ttz-web/Public/favicon.ico;
+    }
+
+    #location ~ .+\.php($|/) {
+    location ~* \.php$ {
+        set $script    $uri;
+        set $path_info  "/";
+        if ($uri ~ "^(.+\.php)(/.+)") {
+            set $script     $1;
+            set $path_info  $2;
+        }
+	fastcgi_pass php-upstream;
+#	fastcgi_pass unix:/dev/shm/php-cgi.sock;
+#	fastcgi_pass unix:/var/www/ttz/docker/php-fpm/php72-fcgi.sock;
+        fastcgi_index  index.php?IF_REWRITE=1;
+        include fastcgi_params;
+        fastcgi_param PATH_INFO $path_info;
+        fastcgi_param SCRIPT_FILENAME  $document_root/$script;
+        fastcgi_param SCRIPT_NAME $script;
+    }
+
+}
+
+server {
+    listen       80;
+    server_name  www.ttz01.com ;
+    access_log  /var/log/nginx/access80-ttz01-01.log;
+    error_log  /var/log/nginx/error80-ttz01.log;
+    include /etc/nginx/sites-available/agent.config;
+
+    root   /var/www/ttz/ttz-web/ttz-web/Public;
+    index index.php index.html;
+
+    #error_page  502 /502.html;
+    #error_page  403 404 /404.html;
+
+    #location = /404.html {
+    #    root   /var/www/ttz/ttz-web/ttz-web/Public/error-html;
+    #    break;
+    #}
+    location /rf {
+        rewrite  ^/rf/(.*)$  /index.php/Register/Register/?$1  last;
+        break;
+    }
+
+    location /fd {
+        rewrite  ^/fd/(.*)$  /index.php/Member/activeRegister/RecommentId/$1  last;
+        break;
+    }
+    location / {
+#       limit_rate 70k;
+        index index.php;
+        if (!-e $request_filename) {
+                rewrite  ^/(.*)$  /index.php/$1  last;
+                break;
+        }
+    }
+
+    location ~* ^.+\.(gif|jpg|jpeg|png|css|js|txt|xml|swf|wav)$ {
+        root         /var/www/ttz/ttz-web/ttz-web/Public;
+        access_log   off;
+        expires      1d;
+    }
+
+    # set site favicon
+    location /favicon.ico {
+        root /var/www/ttz/ttz-web/ttz-web/Public/favicon.ico;
+    }
+
+    #location ~ .+\.php($|/) {
+    location ~* \.php$ {
+        set $script    $uri;
+        set $path_info  "/";
+        if ($uri ~ "^(.+\.php)(/.+)") {
+            set $script     $1;
+            set $path_info  $2;
+        }
+	fastcgi_pass php-upstream;
+#	fastcgi_pass unix:/dev/shm/php-cgi.sock;
+#	fastcgi_pass unix:/var/www/ttz/docker/php-fpm/php72-fcgi.sock;
+        fastcgi_index  index.php?IF_REWRITE=1;
+        include fastcgi_params;
+        fastcgi_param PATH_INFO $path_info;
+        fastcgi_param SCRIPT_FILENAME  $document_root/$script;
+        fastcgi_param SCRIPT_NAME $script;
+    }
+
+}
+
+server {
+    listen       80;
+    server_name  image.ttz.com image1.ttz.com imagerelease.ttz.com;
+#    access_log  /var/log/nginx/access443-ttz-image.log main;
+
+    include /etc/nginx/sites-available/agent.config;
+    root   /var/www/ttz/ttz-web/ttz-web-admin/Public/upload;
+
+    error_page  403 404 /404.html;
+
+    location = /404.html {
+        root   /var/www/ttz/ttz-web/ttz-web/Public/error-html;
+        break;
+    }
+
+    location ~* ^.+\.(ico|gif|jpg|jpeg|png|html|htm|css|js|txt|xml|swf|wav)$ {
+        root         /var/www/ttz/ttz-web/ttz-web-admin/Public/upload;
+        access_log   off;
+        expires      1d;
+    }
+
+}
+
+
+server {
+    listen       80;
+    server_name  static.ttz.com staticrelease.ttz.com;
+    include /etc/nginx/sites-available/agent.config;
+
+
+    #error_page  403 404 /404.html;
+
+
+    location = /404.html {
+        root   /var/www/ttz/ttz-web/ttz-web/Public/error-html;
+        break;
+    }
+
+    location ~* ^.+\.(ico|gif|jpg|jpeg|png|html|htm|css|js|txt|xml|swf|wav|mp3|woff|ttf)$ {
+	root         /var/www/ttz/ttz-web/ttz-web/Public;
+        access_log   off;
+        expires      1d;
+    }
+
+}
+
+#
+#server {
+#    listen 80;
+#    server_name www.ttz.com;
+#    
+#    rewrite ^(.*) https://www.ttz.com/$1 permanent;
+#    access_log off;
+#}
+
+server {
+    listen       80;
+    server_name  www.ttz.local;
+    root   /var/www/ttz/ttz/ttz-vue/dist;
+    access_log  /var/log/nginx/access80-ttz.log;
+    error_log  /var/log/nginx/error80-ttz.log;
+
+    location ~* ^.+\.(ico|gif|jpg|jpeg|png|html|htm|css|js|txt|xml|swf|wav|mp3|woff|ttf)$ {
+        root         /var/www/ttz/ttz/ttz-vue/dist;
+        access_log   off;
+        expires      1d;
+    }
+
+    error_page 404 = http://www.ttz.local;
+
+        location / {
+                try_files $uri $uri/ @router;
+                index  index.html index.htm;
+        }
+        location @router {
+            rewrite ^.*$ /index.html last;
+        }
+
+}
+server {
+    listen       80;
+    server_name  www.ttz.com release.ttz.com;
+    root   /var/www/ttz/ttz-vue/dist;
+    access_log  /var/log/nginx/access80-ttz.log;
+    error_log  /var/log/nginx/error80-ttz.log;
+    include /etc/nginx/sites-available/agent.config;
+
+    location ~/iqiyi/(.*) {
+	    resolver 114.114.114.114;
+            set $para1 $1;
+            default_type text/html;
+            proxy_pass https://www.iqiyi.com/$para1;
+    }
+
+    location ~* ^.+\.(ico|gif|jpg|jpeg|png|html|htm|css|js|txt|xml|swf|wav|mp3|woff|ttf)$ {
+        root         /var/www/ttz/ttz-vue/dist;
+        access_log   off;
+        expires      1d;
+    }
+
+    error_page 404 = http://www.ttz.com;
+
+        location / {
+                try_files $uri $uri/ @router;
+                index  index.html index.htm;
+        }
+        location @router {
+            rewrite ^.*$ /index.html last;
+        }
+
+}
+
+server {
+    listen 80;
+    server_name t.ttz.com;
+
+
+    rewrite ^/(.*) http://www.ttz01.com/Short/index?fdId=$1 redirect;
+    access_log off;
+}

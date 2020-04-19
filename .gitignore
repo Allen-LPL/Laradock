@@ -1,0 +1,8 @@
+*.log
+logs/*
+logs/
+#*.config
+openresty/nginx.conf.bak2
+openresty/conf.d
+gitlab-runner/config/config.toml
+grafana/lib/grafana.db
